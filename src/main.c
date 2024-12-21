@@ -4,6 +4,7 @@ void mainMenu(struct User u)
 {
     int option;
     system("clear");
+    printf("%d\n", u.id);
     printf("\n\n\t\t======= ATM =======\n\n");
     printf("\n\t\t-->> Feel free to choose one of the options below <<--\n");
     printf("\n\t\t[1]- Create a new account\n");
@@ -19,10 +20,11 @@ void mainMenu(struct User u)
     switch (option)
     {
     case 1:
-         createNewAcc(u);
+        createNewAcc(u);
         break;
     case 2:
         // student TODO : add your **Update account information** function
+
         // here
         break;
     case 3:
@@ -57,6 +59,7 @@ void initMenu(struct User *u)
     int r = 0;
     int option;
     system("clear");
+
     printf("\n\n\t\t======= ATM =======\n");
     printf("\n\t\t-->> Feel free to login / register :\n");
     printf("\n\t\t[1]- login\n");
@@ -69,7 +72,8 @@ void initMenu(struct User *u)
         {
         case 1:
             loginMenu(u->name, u->password);
-            if (strcmp(u->password, getPassword(*u)) == 0)
+            u->id = getPassword(*u);
+            if (u->id != -1)
             {
                 printf("\n\nPassword Match!");
             }
@@ -83,8 +87,18 @@ void initMenu(struct User *u)
         case 2:
             // student TODO : add your **Registration** function
             // here
-            // r = 1;
-            // break;
+            u->id = registerMenu(u->name, u->password);
+            if (u->id != -1)
+            {
+                printf("\n\ninfo save");
+            }
+            else
+            {
+                printf("\n User Used\n");
+                exit(1);
+            }
+            r = 1;
+            break;
         case 3:
             exit(1);
             break;
