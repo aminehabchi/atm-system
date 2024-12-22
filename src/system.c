@@ -95,34 +95,58 @@ invalid:
         goto invalid;
     }
 }
+int checkAccontIfExist(sqlite3 *db, int accountNbr)
+{
+    sqlite3_stmt *stmt;
+    const char *sql = "SELECT accountNbr FROM records where accountNbr=?;";
 
+    // Prepare SELECT statement
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
+    {
+        printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return -1;
+    }
+    sqlite3_bind_text(stmt, 1, accountNbr, -1, SQLITE_STATIC);
+    // Execute statement and loop through results
+    while (sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        int id = sqlite3_column_int(stmt, 0);
+        sqlite3_finalize(stmt);
+        return id;
+    }
+    sqlite3_finalize(stmt);
+    return -1;
+}
 void createNewAcc(struct User u)
 {
+    sqlite3 *db;
+    char *Error = 0;
+    int rc = sqlite3_open("database.db", &db);
+    if (rc)
+    {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return -1;
+    }
+    else
+    {
+        fprintf(stderr, "Opened database successfully\n");
+    }
+
     struct Record r;
-    struct Record cr;
     char userName[50];
 
     FILE *pf = fopen(RECORDS, "a+");
 noAccount:
     system("clear");
-    printf("\n%d %s", u.id, u.name);
     printf("\t\t\t===== New record =====\n");
     printf("\nEnter today's date(mm/dd/yyyy):");
     scanf("%d/%d/%d", &r.deposit.month, &r.deposit.day, &r.deposit.year);
     printf("\nEnter the account number:");
     scanf("%d", &r.accountNbr);
-    int c = 0;
-    while (getAccountFromFile(pf, userName, &cr))
+    if (checkAccontIfExist(db, r.accountNbr) != -1)
     {
-        if (cr.id > c)
-        {
-            c = cr.id;
-        }
-        if (strcmp(userName, u.name) == 0 && cr.accountNbr == r.accountNbr)
-        {
-            printf("✖ This Account already exists for this user\n\n");
-            goto noAccount;
-        }
+        goto noAccount;
     }
     printf("\nEnter the country:");
     scanf("%s", r.country);
@@ -133,10 +157,6 @@ noAccount:
     printf("\nChoose the type of account:\n\t-> saving\n\t-> current\n\t-> fixed01(for 1 year)\n\t-> fixed02(for 2 years)\n\t-> fixed03(for 3 years)\n\n\tEnter your choice:");
     scanf("%s", r.accountType);
 
-    r.id = c + 1;
-    saveAccountToFile(pf, u, r);
-
-    fclose(pf);
     success(u);
 }
 

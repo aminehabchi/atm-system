@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <termios.h>
+#include <sqlite3.h>
 struct Date
 {
     int month, day, year;
@@ -34,8 +35,8 @@ void loginMenu(char a[50], char pass[50]);
 
 int registerMenu(char a[50], char pass[50]);
 void saveInfo(FILE *ptr, char a[50], char pass[50], int id);
-int checkInfoIfExist(FILE *ptr, char a[50]);
 
+int checkUserIfExist(sqlite3 *db, char name[50]);
 
 int getPassword(struct User u);
 
@@ -43,3 +44,7 @@ int getPassword(struct User u);
 void createNewAcc(struct User u);
 void mainMenu(struct User u);
 void checkAllAccounts(struct User u);
+
+// database
+
+int CreateTable();

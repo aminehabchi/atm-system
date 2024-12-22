@@ -112,9 +112,14 @@ void initMenu(struct User *u)
 
 int main()
 {
+    int a = CreateTable();
+    if (a == 1)
+    {
+        return 0;
+    }
     struct User u;
-
     initMenu(&u);
     mainMenu(u);
-    return 0;
+
+    return 1;
 }

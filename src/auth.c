@@ -30,72 +30,118 @@ void loginMenu(char a[50], char pass[50])
         return exit(1);
     }
 };
+
 int getPassword(struct User u)
 {
-    FILE *fp;
-    struct User userChecker;
-    fp = fopen("../data/users.txt", "r");
-    if (fp == NULL)
+    sqlite3 *db;
+    sqlite3_stmt *stmt;
+    const char *sql = "SELECT id, uname, password FROM users where uname=?;";
+
+    // Open database
+    if (sqlite3_open("database.db", &db) != SQLITE_OK)
     {
-        printf("Error! opening file");
-        exit(1);
+        printf("Can't open database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return -1;
     }
 
-    while (fscanf(fp, "%d %s %s", &userChecker.id, userChecker.name, userChecker.password) != EOF)
+    // Prepare SELECT statement
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
-        printf("%d\n", userChecker.id);
-        if (strcmp(userChecker.name, u.name) == 0)
-        {
-            fclose(fp);
-            printf("%s\n", userChecker.password);
+        printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return -1;
+    }
+    sqlite3_bind_text(stmt, 1, u.name, -1, SQLITE_STATIC);
+    // Execute statement and loop through results
+    while (sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        int id = sqlite3_column_int(stmt, 0);
+        const char *name = (const char *)sqlite3_column_text(stmt, 1);
+        const char *pass = (const char *)sqlite3_column_text(stmt, 2);
 
-            return userChecker.id;
+        if (strcmp(u.password, pass) == 0)
+        {
+            sqlite3_finalize(stmt);
+            sqlite3_close(db);
+            return id;
         }
     }
 
-    fclose(fp);
+    // Finalize statement and close database
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
     return -1;
 }
 
 int registerMenu(char a[50], char pass[50])
 {
-    FILE *fp;
-    fp = fopen("../data/users.txt", "a+");
-
     system("clear");
-
     printf("\n\n\n\t\t\t\t   Bank Management System\n\t\t\t\t\t User to Register:");
     scanf("%s", a);
-    int id = checkInfoIfExist(fp, a);
-    if (id == -1)
-    {
-        return -1;
-    }
-
     printf("\n\n\n\n\n\t\t\t\tEnter the password to Register:");
     scanf("%s", pass);
 
-    saveInfo(fp, a, pass, id);
-
-    fclose(fp);
-    return id;
-}
-int checkInfoIfExist(FILE *ptr, char a[50])
-{
-    int id = 0;
-
-    struct User userChecker;
-    while (fscanf(ptr, "%d %49s %49s", &userChecker.id, userChecker.name, userChecker.password) != EOF)
+    sqlite3 *db;
+    if (sqlite3_open("database.db", &db) != SQLITE_OK)
     {
-        if (strcmp(userChecker.name, a) == 0)
+        printf("Can't open database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return -1;
+    }
+    if (checkUserIfExist(db, a) == -1)
+    {
+        sqlite3_stmt *stmt;
+        const char *sql = "INSERT INTO users (uname, password) VALUES (?, ?);";
+        // Prepare SELECT statement
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
         {
+            printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+            sqlite3_close(db);
             return -1;
         }
-        id++;
+        sqlite3_bind_text(stmt, 1, a, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 2, pass, -1, SQLITE_STATIC);
+
+        if (sqlite3_step(stmt) != SQLITE_DONE)
+        {
+            printf("Insertion failed: %s\n", sqlite3_errmsg(db));
+        }
+        else
+        {
+            printf("User inserted successfully.\n");
+        }
+        sqlite3_close(db);
+        sqlite3_finalize(stmt);
+        return checkUserIfExist(db, a);
     }
-    return id;
+
+    sqlite3_close(db);
+    return -1;
 }
-void saveInfo(FILE *ptr, char a[50], char pass[50], int id)
+
+int checkUserIfExist(sqlite3 *db, char name[50])
 {
-    fprintf(ptr, "%d %s %s\n", id, a, pass);
-};
+    sqlite3_stmt *stmt;
+    const char *sql = "SELECT id, uname, password FROM users where uname=?;";
+
+    // Prepare SELECT statement
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
+    {
+        printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return -1;
+    }
+    sqlite3_bind_text(stmt, 1, name, -1, SQLITE_STATIC);
+    // Execute statement and loop through results
+    while (sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        int id = sqlite3_column_int(stmt, 0);
+        const char *name = (const char *)sqlite3_column_text(stmt, 1);
+        const char *pass = (const char *)sqlite3_column_text(stmt, 2);
+        sqlite3_finalize(stmt);
+        return id;
+    }
+    sqlite3_finalize(stmt);
+    return -1;
+}
