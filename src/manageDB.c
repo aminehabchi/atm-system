@@ -36,12 +36,12 @@ int CreateTable()
     const char *recordsTable = "CREATE TABLE IF NOT EXISTS records ("
                                "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                                "userId INTEGER,"
-                               "name TEXT NOT NULL UNIQUE,"
+                               "name TEXT NOT NULL,"
                                "country TEXT NOT NULL,"
-                               "phone INTEGER,"
+                               "phone TEXT,"
                                "accountType TEXT NOT NULL,"
                                "accountNbr INTEGER NOT NULL UNIQUE,"
-                               "time DATETIME,"
+                               "time TEXT,"
                                "FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE);";
 
     rc = sqlite3_exec(db, recordsTable, NULL, 0, &Error);

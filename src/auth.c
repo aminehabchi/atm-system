@@ -79,9 +79,12 @@ int registerMenu(char a[50], char pass[50])
     system("clear");
     printf("\n\n\n\t\t\t\t   Bank Management System\n\t\t\t\t\t User to Register:");
     scanf("%s", a);
+    while (getchar() != '\n')
+        ;
     printf("\n\n\n\n\n\t\t\t\tEnter the password to Register:");
     scanf("%s", pass);
-
+     while (getchar() != '\n')
+        ;
     sqlite3 *db;
     if (sqlite3_open("database.db", &db) != SQLITE_OK)
     {
@@ -113,6 +116,7 @@ int registerMenu(char a[50], char pass[50])
         }
         sqlite3_close(db);
         sqlite3_finalize(stmt);
+        
         return checkUserIfExist(db, a);
     }
 

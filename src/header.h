@@ -3,10 +3,10 @@
 #include <string.h>
 #include <termios.h>
 #include <sqlite3.h>
-struct Date
-{
-    int month, day, year;
-};
+// struct Date
+// {
+//     int month, day, year;
+// };
 
 // all fields for each record of an account
 struct Record
@@ -15,12 +15,13 @@ struct Record
     int userId;
     char name[100];
     char country[100];
-    int phone;
+    char phone[10];
     char accountType[10];
     int accountNbr;
     double amount;
-    struct Date deposit;
-    struct Date withdraw;
+    // struct Date deposit;
+    // struct Date withdraw;
+    char time[10];
 };
 
 struct User

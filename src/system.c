@@ -4,34 +4,7 @@ const char *RECORDS = "../data/records.txt";
 
 int getAccountFromFile(FILE *ptr, char name[50], struct Record *r)
 {
-    return fscanf(ptr, "%d %d %s %d %d/%d/%d %s %d %lf %s",
-                  &r->id,
-                  &r->userId,
-                  name,
-                  &r->accountNbr,
-                  &r->deposit.month,
-                  &r->deposit.day,
-                  &r->deposit.year,
-                  r->country,
-                  &r->phone,
-                  &r->amount,
-                  r->accountType) != EOF;
-}
-
-void saveAccountToFile(FILE *ptr, struct User u, struct Record r)
-{
-    fprintf(ptr, "%d %d %s %d %d/%d/%d %s %d %.2lf %s\n\n",
-            r.id,
-            u.id,
-            u.name,
-            r.accountNbr,
-            r.deposit.month,
-            r.deposit.day,
-            r.deposit.year,
-            r.country,
-            r.phone,
-            r.amount,
-            r.accountType);
+    return 0;
 }
 
 void stayOrReturn(int notGood, void f(struct User u), struct User u)
@@ -107,7 +80,8 @@ int checkAccontIfExist(sqlite3 *db, int accountNbr)
         sqlite3_close(db);
         return -1;
     }
-    sqlite3_bind_text(stmt, 1, accountNbr, -1, SQLITE_STATIC);
+    // sqlite3_bind_text(stmt, 1, accountNbr, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 1, accountNbr);
     // Execute statement and loop through results
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
@@ -118,6 +92,36 @@ int checkAccontIfExist(sqlite3 *db, int accountNbr)
     sqlite3_finalize(stmt);
     return -1;
 }
+int InsertAccInfo(sqlite3 *db, struct User u, struct Record r)
+{
+    sqlite3_stmt *stmt;
+    const char *sql = "INSERT INTO records(userId,name,country,phone,accountType,accountNbr,time) VALUES (?,?,?,?,?,?,?);";
+
+    // Prepare SELECT statement
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
+    {
+        printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return 1;
+    }
+
+    sqlite3_bind_int(stmt, 1, u.id);
+    sqlite3_bind_text(stmt, 2, u.name, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, r.country, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 4, r.phone, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 5, r.accountType, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 6, r.accountNbr);
+    sqlite3_bind_text(stmt, 7, r.time, -1, SQLITE_STATIC);
+
+    while (sqlite3_step(stmt) ==  SQLITE_DONE)
+    {
+        
+        sqlite3_finalize(stmt);
+        return 0;
+    }
+    sqlite3_finalize(stmt);
+    return 1;
+}
 void createNewAcc(struct User u)
 {
     sqlite3 *db;
@@ -126,7 +130,7 @@ void createNewAcc(struct User u)
     if (rc)
     {
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-        return -1;
+        return;
     }
     else
     {
@@ -134,14 +138,12 @@ void createNewAcc(struct User u)
     }
 
     struct Record r;
-    char userName[50];
 
-    FILE *pf = fopen(RECORDS, "a+");
 noAccount:
     system("clear");
     printf("\t\t\t===== New record =====\n");
     printf("\nEnter today's date(mm/dd/yyyy):");
-    scanf("%d/%d/%d", &r.deposit.month, &r.deposit.day, &r.deposit.year);
+    scanf("%s", r.time);
     printf("\nEnter the account number:");
     scanf("%d", &r.accountNbr);
     if (checkAccontIfExist(db, r.accountNbr) != -1)
@@ -151,40 +153,18 @@ noAccount:
     printf("\nEnter the country:");
     scanf("%s", r.country);
     printf("\nEnter the phone number:");
-    scanf("%d", &r.phone);
+    scanf("%s", r.phone);
     printf("\nEnter amount to deposit: $");
     scanf("%lf", &r.amount);
     printf("\nChoose the type of account:\n\t-> saving\n\t-> current\n\t-> fixed01(for 1 year)\n\t-> fixed02(for 2 years)\n\t-> fixed03(for 3 years)\n\n\tEnter your choice:");
     scanf("%s", r.accountType);
-
+    if (InsertAccInfo(db, u, r) == 1)
+    {
+        exit(1);
+    }
     success(u);
 }
 
 void checkAllAccounts(struct User u)
 {
-    char userName[100];
-    struct Record r;
-
-    FILE *pf = fopen(RECORDS, "r");
-
-    system("clear");
-    printf("\t\t====== All accounts from user, %s =====\n\n", u.name);
-    while (getAccountFromFile(pf, userName, &r))
-    {
-        if (strcmp(userName, u.name) == 0)
-        {
-            printf("_____________________\n");
-            printf("\nAccount number:%d\nDeposit Date:%d/%d/%d \ncountry:%s \nPhone number:%d \nAmount deposited: $%.2f \nType Of Account:%s\n",
-                   r.accountNbr,
-                   r.deposit.day,
-                   r.deposit.month,
-                   r.deposit.year,
-                   r.country,
-                   r.phone,
-                   r.amount,
-                   r.accountType);
-        }
-    }
-    fclose(pf);
-    success(u);
 }
