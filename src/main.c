@@ -4,7 +4,6 @@ void mainMenu(struct User u)
 {
     int option;
     system("clear");
-    printf("%d\n", u.id);
     printf("\n\n\t\t======= ATM =======\n\n");
     printf("\n\t\t-->> Feel free to choose one of the options below <<--\n");
     printf("\n\t\t[1]- Create a new account\n");
@@ -24,11 +23,11 @@ void mainMenu(struct User u)
         break;
     case 2:
         // student TODO : add your **Update account information** function
-
-        // here
+        updateAcctInfo(u);
         break;
     case 3:
         // student TODO : add your **Check the details of existing accounts** function
+        checkAccounts(u);
         // here
         break;
     case 4:

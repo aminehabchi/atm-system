@@ -41,6 +41,7 @@ int CreateTable()
                                "phone TEXT,"
                                "accountType TEXT NOT NULL,"
                                "accountNbr INTEGER NOT NULL UNIQUE,"
+                               "amount INTEGER,"
                                "time TEXT,"
                                "FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE);";
 
