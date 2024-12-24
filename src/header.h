@@ -33,20 +33,24 @@ struct User
 
 // authentication functions
 void loginMenu(char a[50], char pass[50]);
-
+void initMenu(struct User *u);
 int registerMenu(char a[50], char pass[50]);
-void saveInfo(FILE *ptr, char a[50], char pass[50], int id);
+
 
 int checkUserIfExist(sqlite3 *db, char name[50]);
 
 int getPassword(struct User u);
 
 // system function
-void createNewAcc(struct User u);
-void mainMenu(struct User u);
-void checkAllAccounts(struct User u);
-void checkAccounts(struct User u);
-void updateAcctInfo(struct User u);
+void success(struct User u, sqlite3 *db);
+void mainMenu(struct User u, sqlite3 *db);
+void createNewAcc(struct User u, sqlite3 *db);
+void checkAllAccounts(struct User u, sqlite3 *db);
+void checkAccounts(struct User u, sqlite3 *db, int accountNmber);
+void updateAcctInfo(struct User u, sqlite3 *db);
+void removeExistAccnt(struct User u, sqlite3 *db);
+void makeTransaction(struct User u, sqlite3 *db);
+void transferOwner(struct User u, sqlite3 *db);
 // database
 
 int CreateTable();

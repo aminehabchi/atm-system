@@ -2,51 +2,46 @@
 
 const char *RECORDS = "../data/records.txt";
 
-int getAccountFromFile(FILE *ptr, char name[50], struct Record *r)
-{
-    return 0;
-}
+// void stayOrReturn(int notGood, void f(struct User u), struct User u)
+// {
+//     int option;
+//     if (notGood == 0)
+//     {
+//         system("clear");
+//         printf("\n✖ Record not found!!\n");
+//     invalid:
+//         printf("\nEnter 0 to try again, 1 to return to main menu and 2 to exit:");
+//         scanf("%d", &option);
+//         if (option == 0)
+//             f(u);
+//         else if (option == 1)
+//             mainMenu(u);
+//         else if (option == 2)
+//             exit(0);
+//         else
+//         {
+//             printf("Insert a valid operation!\n");
+//             goto invalid;
+//         }
+//     }
+//     else
+//     {
+//         printf("\nEnter 1 to go to the main menu and 0 to exit:");
+//         scanf("%d", &option);
+//     }
+//     if (option == 1)
+//     {
+//         system("clear");
+//         mainMenu(u);
+//     }
+//     else
+//     {
+//         system("clear");
+//         exit(1);
+//     }
+// }
 
-void stayOrReturn(int notGood, void f(struct User u), struct User u)
-{
-    int option;
-    if (notGood == 0)
-    {
-        system("clear");
-        printf("\n✖ Record not found!!\n");
-    invalid:
-        printf("\nEnter 0 to try again, 1 to return to main menu and 2 to exit:");
-        scanf("%d", &option);
-        if (option == 0)
-            f(u);
-        else if (option == 1)
-            mainMenu(u);
-        else if (option == 2)
-            exit(0);
-        else
-        {
-            printf("Insert a valid operation!\n");
-            goto invalid;
-        }
-    }
-    else
-    {
-        printf("\nEnter 1 to go to the main menu and 0 to exit:");
-        scanf("%d", &option);
-    }
-    if (option == 1)
-    {
-        system("clear");
-        mainMenu(u);
-    }
-    else
-    {
-        system("clear");
-        exit(1);
-    }
-}
-
-void success(struct User u)
+void success(struct User u, sqlite3 *db)
 {
     int option;
     printf("\n✔ Success!\n\n");
@@ -56,7 +51,7 @@ invalid:
     system("clear");
     if (option == 1)
     {
-        mainMenu(u);
+        mainMenu(u, db);
     }
     else if (option == 0)
     {
@@ -122,20 +117,8 @@ int InsertAccInfo(sqlite3 *db, struct User u, struct Record r)
     sqlite3_finalize(stmt);
     return 1;
 }
-void createNewAcc(struct User u)
+void createNewAcc(struct User u, sqlite3 *db)
 {
-    sqlite3 *db;
-    char *Error = 0;
-    int rc = sqlite3_open("database.db", &db);
-    if (rc)
-    {
-        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-        return;
-    }
-    else
-    {
-        fprintf(stderr, "Opened database successfully\n");
-    }
 
     struct Record r;
 
@@ -162,7 +145,7 @@ noAccount:
     {
         exit(1);
     }
-    success(u);
+    success(u, db);
 }
 void printAcountInfo(struct Record r)
 {
@@ -173,71 +156,35 @@ void printAcountInfo(struct Record r)
     printf("Amountdeposited: $%f\n", r.amount);
     printf("Type Of Account:%s\n\n", r.accountType);
 }
-void checkAllAccounts(struct User u)
+
+void checkAllAccounts(struct User u, sqlite3 *db)
 {
-    sqlite3 *db;
-    char *Error = 0;
-    int rc = sqlite3_open("database.db", &db);
-    if (rc)
-    {
-        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-        return;
-    }
-    else
-    {
-        fprintf(stderr, "Opened database successfully\n");
-    }
-
     sqlite3_stmt *stmt;
-    const char *sql = "SELECT accountNbr,country,phone,accountType,time,amount FROM records where userId=?;";
-
-    // Prepare SELECT statement
+    const char *sql = "SELECT accountNbr FROM records where userId=?;";
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
         printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
         return;
     }
-
     sqlite3_bind_int(stmt, 1, u.id);
     system("clear");
     printf("\t\t\t======= All accounts for user, %s =====\n", u.name);
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
-        struct Record r;
-
-        r.accountNbr = sqlite3_column_int(stmt, 0);
-        strcpy(r.country, (char *)sqlite3_column_text(stmt, 1));
-        strcpy(r.phone, (char *)sqlite3_column_text(stmt, 2));
-        strcpy(r.accountType, (char *)sqlite3_column_text(stmt, 3));
-        strcpy(r.time, (char *)sqlite3_column_text(stmt, 4));
-        r.amount = sqlite3_column_int(stmt, 5);
+        int accountNbr = sqlite3_column_int(stmt, 0);
         printf("________________________________\n");
-        printAcountInfo(r);
+        checkAccounts(u, db, accountNbr);
     }
-
     sqlite3_finalize(stmt);
-    success(u);
+    success(u, db);
     return;
 }
-void checkAccounts(struct User u)
+
+void checkAccounts(struct User u, sqlite3 *db, int accountNmber)
 {
     struct Record r;
-    printf("enter Account Number:");
-    scanf("%d", &r.accountNbr);
-
-    sqlite3 *db;
-    char *Error = 0;
-    int rc = sqlite3_open("database.db", &db);
-    if (rc)
-    {
-        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-        return;
-    }
-    else
-    {
-        fprintf(stderr, "Opened database successfully\n");
-    }
+    r.accountNbr = accountNmber;
 
     sqlite3_stmt *stmt;
     const char *sql = "SELECT accountNbr,country,phone,accountType,time,amount FROM records where accountNbr=?;";
@@ -266,67 +213,97 @@ void checkAccounts(struct User u)
     }
 
     sqlite3_finalize(stmt);
-    success(u);
 }
-void updateAcctInfo(struct User u) {
+void updateAcctInfo(struct User u, sqlite3 *db)
+{
     int nbr;
     printf("Enter the account number you want to update: ");
     scanf("%d", &nbr);
-    
+
     printf("Which information do you want to update?\n");
     printf("1 -> Phone number\n");
     printf("2 -> Country\n");
-    
+
     int n;
     scanf("%d", &n);
-    
-    system("clear");  // Optional, but might not work on all systems
 
-    char str[100];  // Allocate buffer for user input
-    if (n == 1) {
+    system("clear");
+    char str[100];
+    if (n == 1)
+    {
         printf("Enter the new phone number: ");
-    } else if (n == 2) {
+    }
+    else if (n == 2)
+    {
         printf("Enter the new country: ");
-    } else {
+    }
+    else
+    {
         printf("Invalid option. Returning...\n");
-        return;
-    }
-    
-    scanf("%s", str);
 
-    sqlite3 *db;
-    char *Error = 0;
-    int rc = sqlite3_open("database.db", &db);
-    if (rc) {
-        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
         return;
-    } else {
-        fprintf(stderr, "Opened database successfully\n");
     }
+    scanf("%s", str);
 
     sqlite3_stmt *stmt;
     const char *sql;
-    if (n == 1) {
+    if (n == 1)
+    {
         sql = "UPDATE records SET phone = ? WHERE accountNbr = ?;";
-    } else {
+    }
+    else
+    {
         sql = "UPDATE records SET country = ? WHERE accountNbr = ?;";
     }
 
-    // Prepare the SQL statement
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
+    {
         printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
+
         return;
     }
 
-    // Bind the new value and account number
     sqlite3_bind_text(stmt, 1, str, -1, SQLITE_STATIC);
     sqlite3_bind_int(stmt, 2, nbr);
 
     // Execute the update statement
-    if (sqlite3_step(stmt) == SQLITE_DONE) {
-        success(u);  // Call success if the update is successful
-    } else {
+    if (sqlite3_step(stmt) == SQLITE_DONE)
+    {
+        success(u, db);
+    }
+    else
+    {
+        printf("Update failed: %s\n", sqlite3_errmsg(db));
+    }
+
+    sqlite3_finalize(stmt);
+}
+void removeExistAccnt(struct User u, sqlite3 *db)
+{
+    int id;
+    printf("enter Account Number:");
+    scanf("%d", &id);
+
+    sqlite3_stmt *stmt;
+    const char *sql;
+
+    sql = "DELETE FROM records WHERE accountNbr=? AND userId=?;";
+    // Prepare the SQL statement
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
+    {
+        printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+    sqlite3_bind_int(stmt, 1, id);
+    sqlite3_bind_int(stmt, 2, u.id);
+    if (sqlite3_step(stmt) == SQLITE_DONE)
+    {
+        success(u, db); // Call success if the update is successful
+        return;
+    }
+    else
+    {
         printf("Update failed: %s\n", sqlite3_errmsg(db));
     }
 
@@ -334,3 +311,135 @@ void updateAcctInfo(struct User u) {
     sqlite3_finalize(stmt);
     sqlite3_close(db);
 }
+
+void makeTransaction(struct User u, sqlite3 *db)
+{
+    int id;
+    printf("enter Account Number:");
+    scanf("%d", &id);
+Retry:
+    int option;
+    printf("withdraw -> 1\n deposit -> 2\n");
+    scanf("%d", &option);
+    if (option == 1)
+    {
+        printf("enter amount you to withdraw:");
+    }
+    else if (option == 2)
+    {
+        printf("enter amount you to deposit:");
+    }
+    else
+    {
+        goto Retry;
+    }
+    int TranAmount;
+    scanf("%d", &TranAmount);
+    /*********************************************/
+
+    sqlite3_stmt *stmt;
+    const char *sql = "SELECT amount FROM records WHERE accountNbr=? AND userId=?;";
+
+    // Prepare the SQL statement
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
+    {
+        printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+    sqlite3_bind_int(stmt, 1, id);
+    sqlite3_bind_int(stmt, 2, u.id);
+    int accntAmount;
+    while (sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        accntAmount = sqlite3_column_int(stmt, 0);
+    }
+    sqlite3_finalize(stmt);
+    if (option == 1 && accntAmount < TranAmount)
+    {
+        system("clear");
+        printf("the amount you chose to withdraw is superior to your aviable balance !!\n\n");
+        mainMenu(u, db);
+        return;
+    }
+    if (option == 1)
+    {
+        accntAmount -= TranAmount;
+    }
+    else
+    {
+        accntAmount += TranAmount;
+    }
+
+    sql = "UPDATE records SET amount=? WHERE accountNbr=? AND userId=?;";
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
+    {
+        printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+    sqlite3_bind_int(stmt, 1, accntAmount);
+    sqlite3_bind_int(stmt, 2, id);
+    sqlite3_bind_int(stmt, 3, u.id);
+    if (sqlite3_step(stmt) == SQLITE_DONE)
+    {
+        success(u, db);
+    }
+    else
+    {
+        printf("Update failed: %s\n", sqlite3_errmsg(db));
+    }
+
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+}
+
+void transferOwner(struct User u, sqlite3 *db)
+{
+    int nbr;
+    printf("enter acccont number you want to transfer ownership:");
+    scanf("%d", &nbr);
+    /// checkIfAccountExist
+    /// checkIfUserExist
+    struct User ToU;
+    printf("which user you want transfer ownership to (user name):");
+    scanf("%s", ToU.name);
+    
+    sqlite3_stmt *stmt;
+    const char *sql = "SELECT id FROM users WHERE uname=?;";
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
+    {
+        printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+    sqlite3_bind_text(stmt, 1, ToU.name, -1, SQLITE_STATIC);
+    while (sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        ToU.id = sqlite3_column_int(stmt, 0);
+    }
+
+    sqlite3_finalize(stmt);
+
+    sql = "UPDATE records SET userId=?,name=? WHERE accountNbr=?;";
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
+    {
+        printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return;
+    }
+    sqlite3_bind_int(stmt, 1, ToU.id);
+    sqlite3_bind_text(stmt, 2, ToU.name, -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 3, nbr);
+    if (sqlite3_step(stmt) == SQLITE_DONE)
+    {
+        success(u, db);
+    }
+    else
+    {
+        printf("aaaa");
+    }
+    printf("\n%d %s %d\n", ToU.id, ToU.name, nbr);
+}
+
+/***550***/

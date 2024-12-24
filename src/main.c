@@ -1,10 +1,10 @@
 #include "header.h"
 
-void mainMenu(struct User u)
+void mainMenu(struct User u, sqlite3 *db)
 {
     int option;
-    system("clear");
-    printf("\n\n\t\t======= ATM =======\n\n");
+    // system("clear");
+    printf("\n\n\t\t======= ATM =======\n");
     printf("\n\t\t-->> Feel free to choose one of the options below <<--\n");
     printf("\n\t\t[1]- Create a new account\n");
     printf("\n\t\t[2]- Update account information\n");
@@ -19,30 +19,37 @@ void mainMenu(struct User u)
     switch (option)
     {
     case 1:
-        createNewAcc(u);
+        createNewAcc(u, db);
         break;
     case 2:
         // student TODO : add your **Update account information** function
-        updateAcctInfo(u);
+        updateAcctInfo(u, db);
         break;
     case 3:
         // student TODO : add your **Check the details of existing accounts** function
-        checkAccounts(u);
+        int n;
+        printf("enter Account Number:");
+        scanf("%d", &n);
+        checkAccounts(u, db, n);
+        success(u, db);
         // here
         break;
     case 4:
-        checkAllAccounts(u);
+        checkAllAccounts(u, db);
         break;
     case 5:
         // student TODO : add your **Make transaction** function
+        makeTransaction(u, db);
         // here
         break;
     case 6:
         // student TODO : add your **Remove existing account** function
+        removeExistAccnt(u, db);
         // here
         break;
     case 7:
         // student TODO : add your **Transfer owner** function
+        transferOwner(u, db);
         // here
         break;
     case 8:
@@ -116,9 +123,21 @@ int main()
     {
         return 0;
     }
+    sqlite3 *db;
+
+    if (sqlite3_open("database.db", &db))
+    {
+        fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        return 0;
+    }
+    else
+    {
+        fprintf(stderr, "Opened database successfully\n");
+    }
+
     struct User u;
     initMenu(&u);
-    mainMenu(u);
+    mainMenu(u, db);
 
     return 1;
 }
