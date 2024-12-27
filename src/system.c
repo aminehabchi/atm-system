@@ -63,98 +63,82 @@ invalid:
         goto invalid;
     }
 }
-int checkAccontIfExist(sqlite3 *db, int accountNbr)
-{
-    sqlite3_stmt *stmt;
-    const char *sql = "SELECT accountNbr FROM records where accountNbr=?;";
 
-    // Prepare SELECT statement
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
-    {
-        printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return -1;
-    }
-    // sqlite3_bind_text(stmt, 1, accountNbr, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 1, accountNbr);
-    // Execute statement and loop through results
-    while (sqlite3_step(stmt) == SQLITE_ROW)
-    {
-        int id = sqlite3_column_int(stmt, 0);
-        sqlite3_finalize(stmt);
-        return id;
-    }
-    sqlite3_finalize(stmt);
-    return -1;
-}
-int InsertAccInfo(sqlite3 *db, struct User u, struct Record r)
-{
-    sqlite3_stmt *stmt;
-    const char *sql = "INSERT INTO records(userId,name,country,phone,accountType,accountNbr,time,amount) VALUES (?,?,?,?,?,?,?,?);";
-
-    // Prepare SELECT statement
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
-    {
-        printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return 1;
-    }
-
-    sqlite3_bind_int(stmt, 1, u.id);
-    sqlite3_bind_text(stmt, 2, u.name, -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 3, r.country, -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 4, r.phone, -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 5, r.accountType, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 6, r.accountNbr);
-    sqlite3_bind_text(stmt, 7, r.time, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 8, r.amount);
-
-    while (sqlite3_step(stmt) == SQLITE_DONE)
-    {
-        sqlite3_finalize(stmt);
-        return 0;
-    }
-    sqlite3_finalize(stmt);
-    return 1;
-}
 void createNewAcc(struct User u, sqlite3 *db)
 {
-
+    while (getchar() != '\n')
+        ;
+    char *buffer = NULL;
     struct Record r;
 
 noAccount:
     system("clear");
     printf("\t\t\t===== New record =====\n");
-    printf("\nEnter today's date(mm/dd/yyyy):");
-    scanf("%s", r.time);
-    printf("\nEnter the account number:");
-    scanf("%d", &r.accountNbr);
+    buffer = NULL;
+    while (buffer == NULL)
+    {
+        printf("\nEnter today's date(mm/dd/yyyy):");
+        buffer = scanString(50, isAlphaNemric);
+    }
+    strcpy(r.time, buffer);
+    free(buffer);
+    r.accountNbr = 0;
+    while (r.accountNbr <= 0)
+    {
+        printf("\nEnter the account number:");
+        r.accountNbr = scanInt();
+    }
+
     if (checkAccontIfExist(db, r.accountNbr) != -1)
     {
         goto noAccount;
     }
-    printf("\nEnter the country:");
-    scanf("%s", r.country);
-    printf("\nEnter the phone number:");
-    scanf("%s", r.phone);
-    printf("\nEnter amount to deposit: $");
-    scanf("%lf", &r.amount);
-    printf("\nChoose the type of account:\n\t-> saving\n\t-> current\n\t-> fixed01(for 1 year)\n\t-> fixed02(for 2 years)\n\t-> fixed03(for 3 years)\n\n\tEnter your choice:");
-    scanf("%s", r.accountType);
+
+    //***************************** */
+    buffer = NULL;
+    while (buffer == NULL)
+    {
+        printf("\nEnter the country:");
+        buffer = scanString(50, isAlphaNemric);
+    }
+    strcpy(r.country, buffer);
+    free(buffer);
+    //***************************** */
+    buffer = NULL;
+    while (buffer == NULL)
+    {
+        printf("\nEnter the phone number:");
+        buffer = scanString(50, isAlphaNemric);
+    }
+    strcpy(r.phone, buffer);
+    free(buffer);
+    buffer = NULL;
+
+    /***************************** */
+    r.amount = 0;
+    while (r.amount <= 0)
+    {
+        printf("\nEnter amount to deposit: $");
+        r.amount = scanDouble();
+    }
+
+    /***************************** */
+
+    while (buffer == NULL)
+    {
+        printf("\nChoose the type of account:\n\t-> saving\n\t-> current\n\t-> fixed01(for 1 year)\n\t-> fixed02(for 2 years)\n\t-> fixed03(for 3 years)\n\n\tEnter your choice:");
+        buffer = scanString(50, isAlphaNemric);
+    }
+    strcpy(r.accountType, buffer);
+    free(buffer);
+    buffer = NULL;
+
+    /********************************/
     if (InsertAccInfo(db, u, r) == 1)
     {
         exit(1);
     }
     success(u, db);
-}
-void printAcountInfo(struct Record r)
-{
-    printf("Account number:%d\n", r.accountNbr);
-    printf("Deposit Date:%s\n", r.time);
-    printf("country:%s\n", r.country);
-    printf("Phone number:%s\n", r.phone);
-    printf("Amountdeposited: $%f\n", r.amount);
-    printf("Type Of Account:%s\n\n", r.accountType);
 }
 
 void checkAllAccounts(struct User u, sqlite3 *db)
@@ -183,6 +167,8 @@ void checkAllAccounts(struct User u, sqlite3 *db)
 
 void checkAccounts(struct User u, sqlite3 *db, int accountNmber)
 {
+    while (getchar() != '\n')
+        ;
     struct Record r;
     r.accountNbr = accountNmber;
 
@@ -208,7 +194,7 @@ void checkAccounts(struct User u, sqlite3 *db, int accountNmber)
         strcpy(r.phone, (char *)sqlite3_column_text(stmt, 2));
         strcpy(r.accountType, (char *)sqlite3_column_text(stmt, 3));
         strcpy(r.time, (char *)sqlite3_column_text(stmt, 4));
-        r.amount = sqlite3_column_int(stmt, 5);
+        r.amount = sqlite3_column_double(stmt, 5);
         printAcountInfo(r);
     }
 
@@ -216,34 +202,48 @@ void checkAccounts(struct User u, sqlite3 *db, int accountNmber)
 }
 void updateAcctInfo(struct User u, sqlite3 *db)
 {
-    int nbr;
-    printf("Enter the account number you want to update: ");
-    scanf("%d", &nbr);
-
-    printf("Which information do you want to update?\n");
-    printf("1 -> Phone number\n");
-    printf("2 -> Country\n");
-
+    int nbr = 0;
+    while (nbr == 0)
+    {
+        printf("Enter the account number you want to update: ");
+        nbr = scanInt();
+    }
     int n;
-    scanf("%d", &n);
+    while (n <= 0)
+    {
+        printf("Which information do you want to update?\n");
+        printf("1 -> Phone number\n");
+        printf("2 -> Country\n");
 
-    system("clear");
+        n = scanInt();
+    }
+
     char str[100];
-    if (n == 1)
-    {
-        printf("Enter the new phone number: ");
-    }
-    else if (n == 2)
-    {
-        printf("Enter the new country: ");
-    }
-    else
+
+    if (n != 1 && n != 2)
     {
         printf("Invalid option. Returning...\n");
-
         return;
     }
-    scanf("%s", str);
+
+    char *buffer = NULL;
+    while (buffer == NULL)
+    {
+        system("clear");
+        if (n == 1)
+        {
+            printf("Enter the new phone number: ");
+        }
+        else if (n == 2)
+        {
+            printf("Enter the new country: ");
+        }
+        printf("\nEnter the phone number:");
+        buffer = scanString(50, isAlphaNemric);
+    }
+    strcpy(str, buffer);
+    free(buffer);
+    buffer = NULL;
 
     sqlite3_stmt *stmt;
     const char *sql;
@@ -259,7 +259,6 @@ void updateAcctInfo(struct User u, sqlite3 *db)
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
         printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
-
         return;
     }
 
@@ -280,9 +279,12 @@ void updateAcctInfo(struct User u, sqlite3 *db)
 }
 void removeExistAccnt(struct User u, sqlite3 *db)
 {
-    int id;
-    printf("enter Account Number:");
-    scanf("%d", &id);
+    int id = 0;
+    while (id <= 0)
+    {
+        printf("enter Account Number:");
+        id = scanInt();
+    }
 
     sqlite3_stmt *stmt;
     const char *sql;
@@ -314,27 +316,48 @@ void removeExistAccnt(struct User u, sqlite3 *db)
 
 void makeTransaction(struct User u, sqlite3 *db)
 {
-    int id;
-    printf("enter Account Number:");
-    scanf("%d", &id);
+    while (getchar() != '\n')
+        ;
+noAccount:
+    int id = 0;
+    while (id <= 0)
+    {
+        printf("enter Account Number:");
+        id = scanInt();
+    }
+
+    if (checkAccontIfExist(db, id) != -1)
+    {
+        goto noAccount;
+    }
 Retry:
-    int option;
-    printf("withdraw -> 1\n deposit -> 2\n");
-    scanf("%d", &option);
+    int option = 0;
+    while (option <= 0 || option > 2)
+    {
+        printf("withdraw -> 1\n deposit -> 2\n");
+        option = scanInt();
+    }
+    char message[30];
     if (option == 1)
     {
-        printf("enter amount you to withdraw:");
+        strcpy(message, "enter amount you to withdraw:");
     }
     else if (option == 2)
     {
-        printf("enter amount you to deposit:");
+        strcpy(message, "enter amount you to deposit:");
     }
     else
     {
         goto Retry;
     }
-    int TranAmount;
-    scanf("%d", &TranAmount);
+
+    double TranAmount;
+    while (TranAmount <= 0)
+    {
+        printf("%s", message);
+        TranAmount = scanDouble();
+    }
+
     /*********************************************/
 
     sqlite3_stmt *stmt;
@@ -349,10 +372,10 @@ Retry:
     }
     sqlite3_bind_int(stmt, 1, id);
     sqlite3_bind_int(stmt, 2, u.id);
-    int accntAmount;
+    double accntAmount;
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
-        accntAmount = sqlite3_column_int(stmt, 0);
+        accntAmount = sqlite3_column_double(stmt, 0);
     }
     sqlite3_finalize(stmt);
     if (option == 1 && accntAmount < TranAmount)
@@ -378,7 +401,7 @@ Retry:
         sqlite3_close(db);
         return;
     }
-    sqlite3_bind_int(stmt, 1, accntAmount);
+    sqlite3_bind_double(stmt, 1, accntAmount);
     sqlite3_bind_int(stmt, 2, id);
     sqlite3_bind_int(stmt, 3, u.id);
     if (sqlite3_step(stmt) == SQLITE_DONE)
@@ -396,15 +419,31 @@ Retry:
 
 void transferOwner(struct User u, sqlite3 *db)
 {
-    int nbr;
-    printf("enter acccont number you want to transfer ownership:");
-    scanf("%d", &nbr);
+    while (getchar() != '\n')
+        ;
+    int nbr = 0;
+    while (nbr <= 0)
+    {
+        printf("enter acccont number you want to transfer ownership:");
+        nbr = scanInt();
+    }
+
     /// checkIfAccountExist
     /// checkIfUserExist
     struct User ToU;
-    printf("which user you want transfer ownership to (user name):");
-    scanf("%s", ToU.name);
-    
+
+    char *buffer = NULL;
+    while (buffer == NULL)
+    {
+
+        printf("which user you want transfer ownership to (user name):");
+        printf("\nEnter the phone number:");
+        buffer = scanString(50, isAlphaNemric);
+    }
+    strcpy(ToU.name, buffer);
+    free(buffer);
+    buffer = NULL;
+
     sqlite3_stmt *stmt;
     const char *sql = "SELECT id FROM users WHERE uname=?;";
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)

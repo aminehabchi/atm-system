@@ -3,6 +3,7 @@
 #include <string.h>
 #include <termios.h>
 #include <sqlite3.h>
+#include <ctype.h>
 // struct Date
 // {
 //     int month, day, year;
@@ -30,27 +31,36 @@ struct User
     char name[50];
     char password[50];
 };
+// main
+void initMenu(struct User *u);
+void mainMenu(struct User u, sqlite3 *db);
 
 // authentication functions
 void loginMenu(char a[50], char pass[50]);
-void initMenu(struct User *u);
 int registerMenu(char a[50], char pass[50]);
 
-
-int checkUserIfExist(sqlite3 *db, char name[50]);
-
-int getPassword(struct User u);
-
 // system function
+void createNewAcc(struct User u, sqlite3 *db);                    // 1
+void updateAcctInfo(struct User u, sqlite3 *db);                  // 2
+void checkAccounts(struct User u, sqlite3 *db, int accountNmber); // 3
+void checkAllAccounts(struct User u, sqlite3 *db);                // 4
+void makeTransaction(struct User u, sqlite3 *db);                 // 5
+void removeExistAccnt(struct User u, sqlite3 *db);                // 6
+void transferOwner(struct User u, sqlite3 *db);                   // 7
 void success(struct User u, sqlite3 *db);
-void mainMenu(struct User u, sqlite3 *db);
-void createNewAcc(struct User u, sqlite3 *db);
-void checkAllAccounts(struct User u, sqlite3 *db);
-void checkAccounts(struct User u, sqlite3 *db, int accountNmber);
-void updateAcctInfo(struct User u, sqlite3 *db);
-void removeExistAccnt(struct User u, sqlite3 *db);
-void makeTransaction(struct User u, sqlite3 *db);
-void transferOwner(struct User u, sqlite3 *db);
-// database
 
+// database
 int CreateTable();
+int getPassword(struct User u);
+int checkUserIfExist(sqlite3 *db, char name[50]);
+int checkAccontIfExist(sqlite3 *db, int accountNbr);
+int InsertAccInfo(sqlite3 *db, struct User u, struct Record r);
+
+// funcs
+int isAlphaNemric(char *s);
+int isPrintble(char *s);
+int isAlphaNemric(char *s);
+char *scanString(int maxlen, int f(char *s));
+int scanInt();
+void printAcountInfo(struct Record r);
+double scanDouble();

@@ -27,9 +27,14 @@ void mainMenu(struct User u, sqlite3 *db)
         break;
     case 3:
         // student TODO : add your **Check the details of existing accounts** function
+        while (getchar() != '\n')
+            ;
         int n;
-        printf("enter Account Number:");
-        scanf("%d", &n);
+        while (n <= 0)
+        {
+            printf("%d enter Account Number:", n);
+            n = scanInt();
+        }
         checkAccounts(u, db, n);
         success(u, db);
         // here
@@ -63,7 +68,6 @@ void mainMenu(struct User u, sqlite3 *db)
 void initMenu(struct User *u)
 {
     int r = 0;
-    int option;
     system("clear");
 
     printf("\n\n\t\t======= ATM =======\n");
@@ -71,14 +75,18 @@ void initMenu(struct User *u)
     printf("\n\t\t[1]- login\n");
     printf("\n\t\t[2]- register\n");
     printf("\n\t\t[3]- exit\n");
+    int option = 0;
     while (!r)
     {
+
+        option = 0;
         scanf("%d", &option);
         switch (option)
         {
         case 1:
             loginMenu(u->name, u->password);
             u->id = getPassword(*u);
+            printf("%s %s", u->name, u->password);
             if (u->id != -1)
             {
                 printf("\n\nPassword Match!");
@@ -94,6 +102,7 @@ void initMenu(struct User *u)
             // student TODO : add your **Registration** function
             // here
             u->id = registerMenu(u->name, u->password);
+
             if (u->id != -1)
             {
                 printf("\n\ninfo save");
