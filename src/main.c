@@ -2,7 +2,7 @@
 
 void mainMenu(struct User u, sqlite3 *db)
 {
-    int option;
+    int option = 0;
     // system("clear");
     printf("\n\n\t\t======= ATM =======\n");
     printf("\n\t\t-->> Feel free to choose one of the options below <<--\n");
@@ -14,7 +14,11 @@ void mainMenu(struct User u, sqlite3 *db)
     printf("\n\t\t[6]- Remove existing account\n");
     printf("\n\t\t[7]- Transfer ownership\n");
     printf("\n\t\t[8]- Exit\n");
-    scanf("%d", &option);
+
+    while (option > 8 || option <= 0)
+    {
+        option = scanInt();
+    }
 
     switch (option)
     {
@@ -22,42 +26,33 @@ void mainMenu(struct User u, sqlite3 *db)
         createNewAcc(u, db);
         break;
     case 2:
-        // student TODO : add your **Update account information** function
         updateAcctInfo(u, db);
         break;
     case 3:
-        // student TODO : add your **Check the details of existing accounts** function
-        while (getchar() != '\n')
-            ;
         int n;
         while (n <= 0)
         {
             printf("%d enter Account Number:", n);
             n = scanInt();
         }
+        system("clear");
         checkAccounts(u, db, n);
         success(u, db);
-        // here
         break;
     case 4:
         checkAllAccounts(u, db);
         break;
     case 5:
-        // student TODO : add your **Make transaction** function
         makeTransaction(u, db);
-        // here
         break;
     case 6:
-        // student TODO : add your **Remove existing account** function
         removeExistAccnt(u, db);
-        // here
         break;
     case 7:
-        // student TODO : add your **Transfer owner** function
         transferOwner(u, db);
-        // here
         break;
     case 8:
+        sqlite3_close(db);
         exit(1);
         break;
     default:
@@ -65,7 +60,7 @@ void mainMenu(struct User u, sqlite3 *db)
     }
 };
 
-void initMenu(struct User *u)
+void initMenu(struct User *u, sqlite3 *db)
 {
     int r = 0;
     system("clear");
@@ -78,14 +73,17 @@ void initMenu(struct User *u)
     int option = 0;
     while (!r)
     {
-
         option = 0;
-        scanf("%d", &option);
+        while (option <= 0 || option > 3)
+        {
+            option = scanInt();
+        }
+
         switch (option)
         {
         case 1:
             loginMenu(u->name, u->password);
-            u->id = getPassword(*u);
+            u->id = getPassword(*u, db);
             printf("%s %s", u->name, u->password);
             if (u->id != -1)
             {
@@ -99,10 +97,7 @@ void initMenu(struct User *u)
             r = 1;
             break;
         case 2:
-            // student TODO : add your **Registration** function
-            // here
-            u->id = registerMenu(u->name, u->password);
-
+            u->id = registerMenu(u->name, u->password, db);
             if (u->id != -1)
             {
                 printf("\n\ninfo save");
@@ -115,18 +110,18 @@ void initMenu(struct User *u)
             r = 1;
             break;
         case 3:
+            sqlite3_close(db);
             exit(1);
             break;
         default:
             printf("Insert a valid operation!\n");
         }
-        while (getchar() != '\n')
-            ;
     }
 };
 
 int main()
 {
+
     int a = CreateTable();
     if (a == 1)
     {
@@ -145,7 +140,7 @@ int main()
     }
 
     struct User u;
-    initMenu(&u);
+    initMenu(&u, db);
     mainMenu(u, db);
 
     return 1;

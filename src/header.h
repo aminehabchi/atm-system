@@ -32,12 +32,12 @@ struct User
     char password[50];
 };
 // main
-void initMenu(struct User *u);
+void initMenu(struct User *u, sqlite3 *db);
 void mainMenu(struct User u, sqlite3 *db);
 
 // authentication functions
 void loginMenu(char a[50], char pass[50]);
-int registerMenu(char a[50], char pass[50]);
+int registerMenu(char a[50], char pass[50], sqlite3 *db);
 
 // system function
 void createNewAcc(struct User u, sqlite3 *db);                    // 1
@@ -51,16 +51,16 @@ void success(struct User u, sqlite3 *db);
 
 // database
 int CreateTable();
-int getPassword(struct User u);
+int getPassword(struct User u, sqlite3 *db);
 int checkUserIfExist(sqlite3 *db, char name[50]);
 int checkAccontIfExist(sqlite3 *db, int accountNbr);
 int InsertAccInfo(sqlite3 *db, struct User u, struct Record r);
 
 // funcs
-int isAlphaNemric(char *s);
-int isPrintble(char *s);
-int isAlphaNemric(char *s);
-char *scanString(int maxlen, int f(char *s));
+int isAlphaNemric(char ch);
+int isPrintble(char ch);
+int isAlphaNemric(char ch);
+char *scanString(int maxlen, int f(char ch));
 int scanInt();
 void printAcountInfo(struct Record r);
 double scanDouble();

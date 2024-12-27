@@ -1,7 +1,5 @@
 #include "header.h"
 
-const char *RECORDS = "../data/records.txt";
-
 // void stayOrReturn(int notGood, void f(struct User u), struct User u)
 // {
 //     int option;
@@ -45,9 +43,13 @@ void success(struct User u, sqlite3 *db)
 {
     int option;
     printf("\n✔ Success!\n\n");
-invalid:
-    printf("Enter 1 to go to the main menu and 0 to exit!\n");
-    scanf("%d", &option);
+
+    while (option < 0 || option > 2)
+    {
+        printf("Enter 1 to go to the main menu and 0 to exit!\n");
+        option = scanInt();
+    }
+
     system("clear");
     if (option == 1)
     {
@@ -55,19 +57,13 @@ invalid:
     }
     else if (option == 0)
     {
+        sqlite3_close(db);
         exit(1);
-    }
-    else
-    {
-        printf("Insert a valid operation!\n");
-        goto invalid;
     }
 }
 
 void createNewAcc(struct User u, sqlite3 *db)
 {
-    while (getchar() != '\n')
-        ;
     char *buffer = NULL;
     struct Record r;
 
@@ -167,8 +163,6 @@ void checkAllAccounts(struct User u, sqlite3 *db)
 
 void checkAccounts(struct User u, sqlite3 *db, int accountNmber)
 {
-    while (getchar() != '\n')
-        ;
     struct Record r;
     r.accountNbr = accountNmber;
 
@@ -184,7 +178,6 @@ void checkAccounts(struct User u, sqlite3 *db, int accountNmber)
     }
 
     sqlite3_bind_int(stmt, 1, r.accountNbr);
-    system("clear");
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
         struct Record r;

@@ -1,66 +1,28 @@
 #include "header.h"
-int isAlphaNemric(char *s)
+int isAlphaNemric(char ch)
 {
-    int i = 0;
-    while (s[i] != '\0')
+    if (isalnum(ch))
     {
-        if (!isalnum(s[i]) && s[i] != '\n')
-        {
-            return -1;
-        }
-        i++;
+        return 1;
     }
-    return 1;
+    return -1;
 }
-int isPrintble(char *s)
+int isPrintble(char ch)
 {
-    int i;
-    while (s[i] != '\0')
+    if (' ' < ch && ch <= 'z')
     {
-        if (s[i] >= ' ' && s[i] <= 'z' && s[i] != '\n')
-        {
-            i++;
-        }
-        else
-        {
-            return -1;
-        }
+        return 1;
     }
-    return 1;
+    return -1;
 }
 
-int isNums(char *s)
+int isNums(char ch)
 {
-    int i;
-    while (s[i] != '\0')
+    if (ch >= '0' && ch <= '9')
     {
-        if (s[i] >= '0' && s[i] <= '9' && s[i] != '\n')
-        {
-            i++;
-        }
-        else
-        {
-            return -1;
-        }
+        return 1;
     }
-    return 1;
-}
-
-char *scanString(int maxlen, int f(char *s))
-{
-    char *line = NULL;
-    size_t len = 0; // Buffer size
-    size_t read;    // Number of characters read
-
-    read = getline(&line, &len, stdin);
-
-    if (read == -1 || read > maxlen || isAlphaNemric(line) == -1)
-    {
-        free(line);
-        return NULL;
-    }
-
-    return line;
+    return -1;
 }
 int indexOfChar(char *str, char ch)
 {
@@ -73,6 +35,46 @@ int indexOfChar(char *str, char ch)
     }
     return -1;
 }
+
+int checkInput(char *s, int f(char ch))
+{
+    int i = 0;
+    while (s[i] != '\0')
+    {
+        if (f(s[i]) == -1)
+        {
+            return -1;
+        }
+        i++;
+    }
+    return 1;
+}
+char *scanString(int maxlen, int f(char ch))
+{
+    char *line = NULL;
+    size_t len = 0; // Buffer size
+    size_t read;    // Number of characters read
+
+    read = getline(&line, &len, stdin);
+
+    if (read == -1 || read > maxlen)
+    {
+        free(line);
+        return NULL;
+    }
+    int i = indexOfChar(line, '\n');
+    if (i != -1)
+    {
+        line[i] = '\0';
+    }
+    if (checkInput(line, f) == -1)
+    {
+        free(line);
+        return NULL;
+    }
+    return line;
+}
+
 int scanInt()
 {
     char *line = NULL;
@@ -82,7 +84,7 @@ int scanInt()
     read = getline(&line, &len, stdin);
 
     // 10 is length(2147483647)
-    if (read == -1 || read > 10 || isNums(line) == -1)
+    if (read == -1 || read > 10)
     {
         free(line);
         return 0;
@@ -93,7 +95,13 @@ int scanInt()
     {
         line[i] = '\0';
     }
+    if (checkInput(line, isNums) == -1)
+    {
+        free(line);
+        return 0;
+    }
     int r = atoi(line);
+    free(line);
     return r;
 }
 
@@ -114,7 +122,6 @@ int isDouble(char *s)
         }
         else if (s[i] >= '0' && s[i] <= '9')
         {
-          
         }
         else
         {
@@ -157,6 +164,6 @@ void printAcountInfo(struct Record r)
     printf("Deposit Date:%s\n", r.time);
     printf("country:%s\n", r.country);
     printf("Phone number:%s\n", r.phone);
-    printf("Amountdeposited: $%f\n", r.amount);
+    printf("Amountdeposited: $%2f\n", r.amount);
     printf("Type Of Account:%s\n\n", r.accountType);
 }

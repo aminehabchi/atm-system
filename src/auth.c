@@ -2,13 +2,11 @@
 
 void loginMenu(char a[50], char pass[50])
 {
-    while (getchar() != '\n')
-        ;
     struct termios oflags, nflags;
     char *buffer = NULL;
+    system("clear");
     while (buffer == NULL)
     {
-        system("clear");
         printf("\n\n\n\t\t\t\t   Bank Management System\n\t\t\t\t\t User Login:");
         buffer = scanString(50, isAlphaNemric);
     }
@@ -43,12 +41,8 @@ void loginMenu(char a[50], char pass[50])
     }
 };
 
-
-
-int registerMenu(char a[50], char pass[50])
+int registerMenu(char a[50], char pass[50], sqlite3 *db)
 {
-    while (getchar() != '\n')
-        ;
     char *buffer = NULL;
     //***************************** */
     while (buffer == NULL)
@@ -70,14 +64,7 @@ int registerMenu(char a[50], char pass[50])
     }
     strcpy(pass, buffer);
     free(buffer);
-    
-    sqlite3 *db;
-    if (sqlite3_open("database.db", &db) != SQLITE_OK)
-    {
-        printf("Can't open database: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return -1;
-    }
+
     if (checkUserIfExist(db, a) == -1)
     {
         sqlite3_stmt *stmt;

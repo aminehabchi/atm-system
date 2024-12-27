@@ -61,19 +61,10 @@ int CreateTable()
     sqlite3_close(db);
     return 0;
 }
-int getPassword(struct User u)
+int getPassword(struct User u, sqlite3 *db)
 {
-    sqlite3 *db;
     sqlite3_stmt *stmt;
     const char *sql = "SELECT id, uname, password FROM users where uname=?;";
-
-    // Open database
-    if (sqlite3_open("database.db", &db) != SQLITE_OK)
-    {
-        printf("Can't open database: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return -1;
-    }
 
     // Prepare SELECT statement
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
@@ -155,7 +146,7 @@ int checkAccontIfExist(sqlite3 *db, int accountNbr)
 int InsertAccInfo(sqlite3 *db, struct User u, struct Record r)
 {
     sqlite3_stmt *stmt;
-    const char *sql = "INSERT INTO records(userId,name,country,phone,accountType,accountNbr,time,amount) VALUES (?,?,?,?,?,?,?,?);";
+     char *sql = "INSERT INTO records(userId,name,country,phone,accountType,accountNbr,time,amount) VALUES (?,?,?,?,?,?,?,?);";
 
     // Prepare SELECT statement
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
