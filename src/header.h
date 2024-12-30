@@ -53,7 +53,7 @@ void success(struct User u, sqlite3 *db);
 int CreateTable();
 int getPassword(struct User u, sqlite3 *db);
 int checkUserIfExist(sqlite3 *db, char name[50]);
-int checkAccontIfExist(sqlite3 *db, int accountNbr);
+int checkAccountIfExist(sqlite3 *db, int userId, int accountNbr);
 int InsertAccInfo(sqlite3 *db, struct User u, struct Record r);
 
 // funcs

@@ -57,7 +57,6 @@ void success(struct User u, sqlite3 *db)
     }
     else if (option == 0)
     {
-        sqlite3_close(db);
         exit(1);
     }
 }
@@ -67,8 +66,8 @@ void createNewAcc(struct User u, sqlite3 *db)
     char *buffer = NULL;
     struct Record r;
 
-noAccount:
     system("clear");
+noAccount:
     printf("\t\t\t===== New record =====\n");
     buffer = NULL;
     while (buffer == NULL)
@@ -85,7 +84,7 @@ noAccount:
         r.accountNbr = scanInt();
     }
 
-    if (checkAccontIfExist(db, r.accountNbr) != -1)
+    if (checkAccountIfExist(db, u.id, r.accountNbr) == -1)
     {
         goto noAccount;
     }
@@ -130,7 +129,7 @@ noAccount:
     buffer = NULL;
 
     /********************************/
-    if (InsertAccInfo(db, u, r) == 1)
+    if (InsertAccInfo(db, u, r) != 1)
     {
         exit(1);
     }
@@ -144,7 +143,7 @@ void checkAllAccounts(struct User u, sqlite3 *db)
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
         printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
+
         return;
     }
     sqlite3_bind_int(stmt, 1, u.id);
@@ -173,7 +172,6 @@ void checkAccounts(struct User u, sqlite3 *db, int accountNmber)
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
         printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
         return;
     }
 
@@ -195,14 +193,15 @@ void checkAccounts(struct User u, sqlite3 *db, int accountNmber)
 }
 void updateAcctInfo(struct User u, sqlite3 *db)
 {
-    int nbr = 0;
+    int nbr = -1;
     while (nbr == 0)
     {
         printf("Enter the account number you want to update: ");
         nbr = scanInt();
     }
+
     int n;
-    while (n <= 0)
+    while (n <= 0 || n > 2)
     {
         printf("Which information do you want to update?\n");
         printf("1 -> Phone number\n");
@@ -212,12 +211,6 @@ void updateAcctInfo(struct User u, sqlite3 *db)
     }
 
     char str[100];
-
-    if (n != 1 && n != 2)
-    {
-        printf("Invalid option. Returning...\n");
-        return;
-    }
 
     char *buffer = NULL;
     while (buffer == NULL)
@@ -242,11 +235,11 @@ void updateAcctInfo(struct User u, sqlite3 *db)
     const char *sql;
     if (n == 1)
     {
-        sql = "UPDATE records SET phone = ? WHERE accountNbr = ?;";
+        sql = "UPDATE records SET phone = ? WHERE accountNbr = ? AND userId=?;";
     }
     else
     {
-        sql = "UPDATE records SET country = ? WHERE accountNbr = ?;";
+        sql = "UPDATE records SET country = ? WHERE accountNbr = ? AND userId=?;";
     }
 
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
@@ -257,7 +250,7 @@ void updateAcctInfo(struct User u, sqlite3 *db)
 
     sqlite3_bind_text(stmt, 1, str, -1, SQLITE_STATIC);
     sqlite3_bind_int(stmt, 2, nbr);
-
+    sqlite3_bind_int(stmt, 3, u.id);
     // Execute the update statement
     if (sqlite3_step(stmt) == SQLITE_DONE)
     {
@@ -287,7 +280,7 @@ void removeExistAccnt(struct User u, sqlite3 *db)
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
         printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
+
         return;
     }
     sqlite3_bind_int(stmt, 1, id);
@@ -304,7 +297,6 @@ void removeExistAccnt(struct User u, sqlite3 *db)
 
     // Finalize and close the database
     sqlite3_finalize(stmt);
-    sqlite3_close(db);
 }
 
 void makeTransaction(struct User u, sqlite3 *db)
@@ -319,7 +311,7 @@ noAccount:
         id = scanInt();
     }
 
-    if (checkAccontIfExist(db, id) != -1)
+    if (checkAccountIfExist(db, u.id, id) == -1)
     {
         goto noAccount;
     }
@@ -360,7 +352,7 @@ Retry:
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
         printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
+
         return;
     }
     sqlite3_bind_int(stmt, 1, id);
@@ -391,7 +383,7 @@ Retry:
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
         printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
+
         return;
     }
     sqlite3_bind_double(stmt, 1, accntAmount);
@@ -407,7 +399,6 @@ Retry:
     }
 
     sqlite3_finalize(stmt);
-    sqlite3_close(db);
 }
 
 void transferOwner(struct User u, sqlite3 *db)
@@ -442,7 +433,7 @@ void transferOwner(struct User u, sqlite3 *db)
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
         printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
+
         return;
     }
     sqlite3_bind_text(stmt, 1, ToU.name, -1, SQLITE_STATIC);
@@ -457,7 +448,7 @@ void transferOwner(struct User u, sqlite3 *db)
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
         printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
+
         return;
     }
     sqlite3_bind_int(stmt, 1, ToU.id);

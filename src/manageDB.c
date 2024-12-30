@@ -25,7 +25,7 @@ int CreateTable()
     {
         fprintf(stderr, "SQL error: %s\n", Error);
         sqlite3_free(Error);
-        sqlite3_close(db);
+
         return 1;
     }
     else
@@ -50,7 +50,7 @@ int CreateTable()
     {
         fprintf(stderr, "SQL error: %s\n", Error);
         sqlite3_free(Error);
-        sqlite3_close(db);
+
         return 1;
     }
     else
@@ -58,7 +58,6 @@ int CreateTable()
         fprintf(stdout, "Table created successfully\n");
     }
 
-    sqlite3_close(db);
     return 0;
 }
 int getPassword(struct User u, sqlite3 *db)
@@ -70,7 +69,7 @@ int getPassword(struct User u, sqlite3 *db)
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
         printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
+
         return -1;
     }
     sqlite3_bind_text(stmt, 1, u.name, -1, SQLITE_STATIC);
@@ -84,14 +83,12 @@ int getPassword(struct User u, sqlite3 *db)
         if (strcmp(u.password, pass) == 0)
         {
             sqlite3_finalize(stmt);
-            sqlite3_close(db);
             return id;
         }
     }
 
     // Finalize statement and close database
     sqlite3_finalize(stmt);
-    sqlite3_close(db);
     return -1;
 }
 int checkUserIfExist(sqlite3 *db, char name[50])
@@ -103,7 +100,6 @@ int checkUserIfExist(sqlite3 *db, char name[50])
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
         printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
         return -1;
     }
     sqlite3_bind_text(stmt, 1, name, -1, SQLITE_STATIC);
@@ -119,41 +115,43 @@ int checkUserIfExist(sqlite3 *db, char name[50])
     sqlite3_finalize(stmt);
     return -1;
 }
-int checkAccontIfExist(sqlite3 *db, int accountNbr)
+int checkAccountIfExist(sqlite3 *db, int userId, int accountNbr)
 {
     sqlite3_stmt *stmt;
-    const char *sql = "SELECT accountNbr FROM records where accountNbr=?;";
+    const char *sql = "SELECT id FROM records WHERE userId=? AND accountNbr=?;";
 
-    // Prepare SELECT statement
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
-        printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
+        printf("zz Failed to prepare statement: %s\n", sqlite3_errmsg(db));
         return -1;
     }
-    // sqlite3_bind_text(stmt, 1, accountNbr, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 1, accountNbr);
-    // Execute statement and loop through results
-    while (sqlite3_step(stmt) == SQLITE_ROW)
+
+    // Bind userId parameter
+    sqlite3_bind_int(stmt, 1, userId);
+    sqlite3_bind_int(stmt, 2, accountNbr);
+    // Execute statement and check if any result is found
+    if (sqlite3_step(stmt) == SQLITE_ROW)
     {
-        int id = sqlite3_column_int(stmt, 0);
+        // Account exists
         sqlite3_finalize(stmt);
-        return id;
+        return -1;
     }
+
+    // No result found (account doesn't exist)
     sqlite3_finalize(stmt);
-    return -1;
+    return 1;
 }
+
 int InsertAccInfo(sqlite3 *db, struct User u, struct Record r)
 {
     sqlite3_stmt *stmt;
-     char *sql = "INSERT INTO records(userId,name,country,phone,accountType,accountNbr,time,amount) VALUES (?,?,?,?,?,?,?,?);";
+    char *sql = "INSERT INTO records(userId,name,country,phone,accountType,accountNbr,time,amount) VALUES (?,?,?,?,?,?,?,?);";
 
     // Prepare SELECT statement
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
         printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return 1;
+        return 0;
     }
 
     sqlite3_bind_int(stmt, 1, u.id);
@@ -165,11 +163,12 @@ int InsertAccInfo(sqlite3 *db, struct User u, struct Record r)
     sqlite3_bind_text(stmt, 7, r.time, -1, SQLITE_STATIC);
     sqlite3_bind_double(stmt, 8, r.amount);
 
-    while (sqlite3_step(stmt) == SQLITE_DONE)
+    int rc = sqlite3_step(stmt);
+    if (rc == SQLITE_DONE)
     {
         sqlite3_finalize(stmt);
-        return 0;
+        return 1;
     }
     sqlite3_finalize(stmt);
-    return 1;
+    return 0;
 }
