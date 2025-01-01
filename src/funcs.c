@@ -140,7 +140,7 @@ double scanDouble()
     size_t read;    // Number of characters read
     read = getline(&line, &len, stdin);
     // 10 is length(2147483647)
-    if (read == -1 || read > 10)
+    if (read == -1 || read > 11)
     {
         free(line);
         return 0;

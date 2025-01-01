@@ -29,10 +29,10 @@ void mainMenu(struct User u, sqlite3 *db)
         updateAcctInfo(u, db);
         break;
     case 3:
-        int n;
-        while (n <= 0)
+        int n = 0;
+        while (n == 0)
         {
-            printf("%d enter Account Number:", n);
+            printf("enter Account Number:");
             n = scanInt();
         }
         system("clear");
