@@ -84,7 +84,7 @@ noAccount:
         r.accountNbr = scanInt();
     }
 
-    if (checkAccountIfExist(db, u.id, r.accountNbr) == -1)
+    if (checkAccountIfExist(db, u.id, r.accountNbr) != 1)
     {
         goto noAccount;
     }
@@ -196,7 +196,7 @@ void checkAccounts(struct User u, sqlite3 *db, int accountNmber)
 void updateAcctInfo(struct User u, sqlite3 *db)
 {
     int nbr = -1;
-    while (nbr <= 0)
+    while (nbr <= 0 || checkAccountIfExist(db, u.id, nbr) != 2)
     {
         printf("Enter the account number you want to update: ");
         nbr = scanInt();
@@ -267,9 +267,9 @@ void updateAcctInfo(struct User u, sqlite3 *db)
 void removeExistAccnt(struct User u, sqlite3 *db)
 {
     int id = 0;
-    while (id <= 0)
+    while (id <= 0 || checkAccountIfExist(db, u.id, id) != 2)
     {
-        printf("Enter Account Number:");
+        printf("Enter Account Number you want to remove:");
         id = scanInt();
     }
 
@@ -281,7 +281,6 @@ void removeExistAccnt(struct User u, sqlite3 *db)
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
         printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
-
         return;
     }
     sqlite3_bind_int(stmt, 1, id);
@@ -302,17 +301,11 @@ void removeExistAccnt(struct User u, sqlite3 *db)
 
 void makeTransaction(struct User u, sqlite3 *db)
 {
-noAccount:
     int id = 0;
-    while (id == 0)
+    while (id <= 0 || checkAccountIfExist(db, u.id, id) != 2)
     {
-        printf("enter Account Number:");
+        printf("Enter Account Number you want to remove:");
         id = scanInt();
-    }
-
-    if (checkAccountIfExist(db, u.id, id) == -1)
-    {
-        goto noAccount;
     }
 
     int option = 0;
@@ -398,32 +391,28 @@ noAccount:
 
 void transferOwner(struct User u, sqlite3 *db)
 {
-retry:
     int nbr = 0;
-    while (nbr <= 0)
+    while (nbr <= 0 || checkAccountIfExist(db, u.id, nbr) != 2)
     {
-        printf("enter acccont number you want to transfer ownership:");
+        printf("Enter Account Number you want to remove:");
         nbr = scanInt();
     }
-    if (checkAccountIfExist(db, u.id, nbr) == -1)
-    {
-        goto retry;
-    }
-    /// checkIfAccountExist
-    /// checkIfUserExist
+ReTry:
     struct User ToU;
-
     char *buffer = NULL;
     while (buffer == NULL)
     {
-
         printf("which user you want transfer ownership to (user name):");
         buffer = scanString(50, isAlphaNemric);
     }
     strcpy(ToU.name, buffer);
     free(buffer);
     buffer = NULL;
-
+    ToU.id = checkUserIfExist(db, ToU.name);
+    if (ToU.id == 0)
+    {
+        goto ReTry;
+    }
     sqlite3_stmt *stmt;
     const char *sql = "SELECT id FROM users WHERE uname=?;";
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)

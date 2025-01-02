@@ -112,39 +112,47 @@ int checkUserIfExist(sqlite3 *db, char name[50])
         sqlite3_finalize(stmt);
         return id;
     }
+
+    if (sqlite3_step(stmt) == SQLITE_DONE)
+    {
+        sqlite3_finalize(stmt);
+        return 0;
+    }
     sqlite3_finalize(stmt);
     return -1;
 }
 int checkAccountIfExist(sqlite3 *db, int userId, int accountNbr)
 {
+    printf("%d %d\n", userId, accountNbr);
     sqlite3_stmt *stmt;
     const char *sql = "SELECT id FROM records WHERE userId=? AND accountNbr=?;";
 
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
         printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
-        return -1;
+        return -1; // Error during preparation
     }
 
-    // Bind userId parameter
     sqlite3_bind_int(stmt, 1, userId);
     sqlite3_bind_int(stmt, 2, accountNbr);
-    //
+
     int rc = sqlite3_step(stmt);
     if (rc == SQLITE_ROW)
     {
         sqlite3_finalize(stmt);
-        return 1;
+        return 2; // account exists
     }
-    else if (rc != SQLITE_DONE && rc != SQLITE_OK)
+    else if (rc == SQLITE_DONE)
+    {
+        sqlite3_finalize(stmt);
+        return 1; // account does not exist
+    }
+    else
     {
         printf("Error during step: %s\n", sqlite3_errmsg(db));
         sqlite3_finalize(stmt);
-        return -1;
+        return -1; // Execution error
     }
-    //
-    sqlite3_finalize(stmt);
-    return -1;
 }
 
 int InsertAccInfo(sqlite3 *db, struct User u, struct Record r)
