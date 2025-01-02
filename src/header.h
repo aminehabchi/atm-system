@@ -64,3 +64,5 @@ char *scanString(int maxlen, int f(char ch));
 int scanInt();
 void printAcountInfo(struct Record r);
 double scanDouble();
+char *accountType(int n);
+void accountDetials(char accountType[10], double amount);

@@ -1,44 +1,5 @@
 #include "header.h"
 
-// void stayOrReturn(int notGood, void f(struct User u), struct User u)
-// {
-//     int option;
-//     if (notGood == 0)
-//     {
-//         system("clear");
-//         printf("\n✖ Record not found!!\n");
-//     invalid:
-//         printf("\nEnter 0 to try again, 1 to return to main menu and 2 to exit:");
-//         scanf("%d", &option);
-//         if (option == 0)
-//             f(u);
-//         else if (option == 1)
-//             mainMenu(u);
-//         else if (option == 2)
-//             exit(0);
-//         else
-//         {
-//             printf("Insert a valid operation!\n");
-//             goto invalid;
-//         }
-//     }
-//     else
-//     {
-//         printf("\nEnter 1 to go to the main menu and 0 to exit:");
-//         scanf("%d", &option);
-//     }
-//     if (option == 1)
-//     {
-//         system("clear");
-//         mainMenu(u);
-//     }
-//     else
-//     {
-//         system("clear");
-//         exit(1);
-//     }
-// }
-
 void success(struct User u, sqlite3 *db)
 {
     int option = -1;
@@ -50,7 +11,6 @@ void success(struct User u, sqlite3 *db)
         option = scanInt();
     }
 
-    // system("clear");
     if (option == 1)
     {
         mainMenu(u, db);
@@ -119,14 +79,13 @@ noAccount:
 
     /***************************** */
 
-    while (buffer == NULL)
+    int n = 0;
+    printf("\nChoose the type of account:\n\t1 -> saving\n\t2 -> current\n\t3 -> fixed01(for 1 year)\n\t4 -> fixed02(for 2 years)\n\t5 -> fixed03(for 3 years)\n\n\tEnter your choice:");
+    while (n <= 0 || n > 5)
     {
-        printf("\nChoose the type of account:\n\t-> saving\n\t-> current\n\t-> fixed01(for 1 year)\n\t-> fixed02(for 2 years)\n\t-> fixed03(for 3 years)\n\n\tEnter your choice:");
-        buffer = scanString(50, isAlphaNemric);
+        n = scanInt();
     }
-    strcpy(r.accountType, buffer);
-    free(buffer);
-    buffer = NULL;
+    strcpy(r.accountType, accountType(n));
 
     /********************************/
     if (InsertAccInfo(db, u, r) == 0)
@@ -189,6 +148,7 @@ void checkAccounts(struct User u, sqlite3 *db, int accountNmber)
         strcpy(r.time, (char *)sqlite3_column_text(stmt, 4));
         r.amount = sqlite3_column_double(stmt, 5);
         printAcountInfo(r);
+        accountDetials(r.accountType, r.amount);
     }
 
     sqlite3_finalize(stmt);

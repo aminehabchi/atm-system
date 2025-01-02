@@ -164,6 +164,49 @@ void printAcountInfo(struct Record r)
     printf("Deposit Date:%s\n", r.time);
     printf("country:%s\n", r.country);
     printf("Phone number:%s\n", r.phone);
-    printf("Amountdeposited: $%2f\n", r.amount);
+    printf("Amountdeposited: $%.2f\n", r.amount);
     printf("Type Of Account:%s\n\n", r.accountType);
+}
+void accountDetials(char accountType[10], double amount)
+{
+    printf("%s\n", accountType);
+    if (strcmp(accountType, "saving") == 0)
+    {
+        amount = amount * 0.07 / 12;
+    }
+    else if (strcmp(accountType, "fixed03") == 0)
+    {
+        amount = amount * 0.04 / 12;
+    }
+    else if (strcmp(accountType, "fixed01") == 0)
+    {
+        amount = amount * 0.05 / 12;
+    }
+    else if (strcmp(accountType, "fixed02") == 0)
+    {
+        amount = amount * 0.08 / 12;
+    }
+    else
+    {
+        printf("\nYou will not get interests because the account is of type current\n");
+        return;
+    }
+    printf("\n-> You will get $%.2f as interest on day 00 of every month\n", amount);
+}
+char *accountType(int n)
+{
+    switch (n)
+    {
+    case 1:
+        return "saving";
+    case 2:
+        return "current";
+    case 3:
+        return "fixed01";
+    case 4:
+        return "fixed02";
+    case 5:
+        return "fixed03";
+    }
+    return "";
 }
