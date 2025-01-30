@@ -49,7 +49,6 @@ int registerMenu(char a[50], char pass[50], sqlite3 *db)
     {
         system("clear");
         printf("\n\n\n\t\t\t\t   Bank Management System\n\t\t\t\t\t User to Register:");
-        // scanf("%s", a);
         buffer = scanString(50, isAlphaNemric);
     }
     strcpy(a, buffer);
@@ -65,34 +64,6 @@ int registerMenu(char a[50], char pass[50], sqlite3 *db)
     strcpy(pass, buffer);
     free(buffer);
 
-    if (checkUserIfExist(db, a) == -1)
-    {
-        sqlite3_stmt *stmt;
-        const char *sql = "INSERT INTO users (uname, password) VALUES (?, ?);";
-        // Prepare SELECT statement
-        if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
-        {
-            printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
-         
-            return -1;
-        }
-        sqlite3_bind_text(stmt, 1, a, -1, SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 2, pass, -1, SQLITE_STATIC);
-
-        if (sqlite3_step(stmt) != SQLITE_DONE)
-        {
-            printf("Insertion failed: %s\n", sqlite3_errmsg(db));
-        }
-        else
-        {
-            printf("User inserted successfully.\n");
-        }
-        
-        sqlite3_finalize(stmt);
-
-        return checkUserIfExist(db, a);
-    }
-
-    
-    return -1;
+    return registerInfo(a, pass, db);
 }
+

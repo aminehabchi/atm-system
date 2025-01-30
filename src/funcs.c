@@ -56,8 +56,7 @@ char *scanString(int maxlen, int f(char ch))
     size_t read;    // Number of characters read
 
     read = getline(&line, &len, stdin);
-
-    if (read == -1 || read > maxlen)
+    if (read <= 1 || read > maxlen)
     {
         free(line);
         return NULL;
@@ -84,7 +83,7 @@ int scanInt()
     read = getline(&line, &len, stdin);
 
     // 10 is length(2147483647)
-    if (read == -1 || read > 10)
+    if (read <= 1 || read > 10)
     {
         free(line);
         return 0;
@@ -167,8 +166,9 @@ void printAcountInfo(struct Record r)
     printf("Amountdeposited: $%.2f\n", r.amount);
     printf("Type Of Account:%s\n\n", r.accountType);
 }
-void accountDetials(char accountType[10], double amount)
+void accountDetials(char accountType[10], double amount, char *time)
 {
+    char *day = strtok(time, "/");
     printf("%s\n", accountType);
     if (strcmp(accountType, "saving") == 0)
     {
@@ -191,7 +191,7 @@ void accountDetials(char accountType[10], double amount)
         printf("\nYou will not get interests because the account is of type current\n");
         return;
     }
-    printf("\n-> You will get $%.2f as interest on day 00 of every month\n", amount);
+    printf("\n-> You will get $%.2f as interest on day %s of every month\n", amount, day);
 }
 char *accountType(int n)
 {
@@ -209,4 +209,61 @@ char *accountType(int n)
         return "fixed03";
     }
     return "";
+}
+
+int isValidDate(int day, int month, int year)
+{
+    if (month < 1 || month > 12)
+        return 0; // Invalid month
+    if (day < 1)
+        return 0; // Invalid day
+
+    // Days in each month
+    int daysInMonth[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
+    // Leap year check
+    if (month == 2 && ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)))
+        daysInMonth[2] = 29;
+
+    return (day <= daysInMonth[month]); // Check if day is valid for the month
+}
+
+void scanDate(Date *date)
+{
+    char input[20]; // Buffer for input
+    int day, month, year;
+
+    while (1)
+    {
+        printf("Enter date (dd/mm/yyyy): ");
+        if (!fgets(input, sizeof(input), stdin))
+        {
+            printf("Error reading input. Try again.\n");
+            continue;
+        }
+
+        // Validate format using sscanf
+        if (sscanf(input, "%d/%d/%d", &day, &month, &year) != 3)
+        {
+            printf("Invalid format! Use dd/mm/yyyy.\n");
+            continue;
+        }
+
+        // Check if date is valid
+        if (!isValidDate(day, month, year))
+        {
+            printf("Invalid date! Please enter a real date.\n");
+            continue;
+        }
+
+        // Assign values if valid
+        date->day = day;
+        date->month = month;
+        date->year = year;
+        break;
+    }
+}
+void dateToString(Date date, char *str)
+{
+    sprintf(str, "%02d/%02d/%04d", date.day, date.month, date.year);
 }

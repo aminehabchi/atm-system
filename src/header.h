@@ -4,12 +4,13 @@
 #include <termios.h>
 #include <sqlite3.h>
 #include <ctype.h>
-// struct Date
-// {
-//     int month, day, year;
-// };
+typedef struct
+{
+    int day;
+    int month;
+    int year;
+} Date;
 
-// all fields for each record of an account
 struct Record
 {
     int id;
@@ -20,8 +21,6 @@ struct Record
     char accountType[10];
     int accountNbr;
     double amount;
-    // struct Date deposit;
-    // struct Date withdraw;
     char time[10];
 };
 
@@ -31,6 +30,7 @@ struct User
     char name[50];
     char password[50];
 };
+
 // main
 void initMenu(struct User *u, sqlite3 *db);
 void mainMenu(struct User u, sqlite3 *db);
@@ -55,6 +55,8 @@ int getPassword(struct User u, sqlite3 *db);
 int checkUserIfExist(sqlite3 *db, char name[50]);
 int checkAccountIfExist(sqlite3 *db, int userId, int accountNbr);
 int InsertAccInfo(sqlite3 *db, struct User u, struct Record r);
+int registerInfo(char a[50], char pass[50], sqlite3 *db);
+double getAmount(int id, int accountId, sqlite3 *db);
 
 // funcs
 int isAlphaNemric(char ch);
@@ -65,4 +67,7 @@ int scanInt();
 void printAcountInfo(struct Record r);
 double scanDouble();
 char *accountType(int n);
-void accountDetials(char accountType[10], double amount);
+void accountDetials(char accountType[10], double amount,char *time);
+void scanDate(Date *date);
+int isValidDate(int day, int month, int year);
+void dateToString(Date date, char *str);

@@ -4,7 +4,7 @@ int CreateTable()
 {
     sqlite3 *db;
     char *Error = 0;
-    int rc = sqlite3_open("database.db", &db);
+    int rc = sqlite3_open("../data/database.db", &db);
     if (rc)
     {
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
@@ -113,7 +113,7 @@ int checkUserIfExist(sqlite3 *db, char name[50])
         return id;
     }
 
-    if (sqlite3_step(stmt) == SQLITE_DONE)
+    if (sqlite3_step(stmt) == SQLITE_DONE || sqlite3_step(stmt) == SQLITE_OK)
     {
         sqlite3_finalize(stmt);
         return 0;
@@ -123,7 +123,6 @@ int checkUserIfExist(sqlite3 *db, char name[50])
 }
 int checkAccountIfExist(sqlite3 *db, int userId, int accountNbr)
 {
-    printf("%d %d\n", userId, accountNbr);
     sqlite3_stmt *stmt;
     const char *sql = "SELECT id FROM records WHERE userId=? AND accountNbr=?;";
 
@@ -151,6 +150,7 @@ int checkAccountIfExist(sqlite3 *db, int userId, int accountNbr)
     {
         printf("Error during step: %s\n", sqlite3_errmsg(db));
         sqlite3_finalize(stmt);
+        exit(1);
         return -1; // Execution error
     }
 }
@@ -184,4 +184,59 @@ int InsertAccInfo(sqlite3 *db, struct User u, struct Record r)
     }
     sqlite3_finalize(stmt);
     return 1;
+}
+int registerInfo(char a[50], char pass[50], sqlite3 *db)
+{
+    if (checkUserIfExist(db, a) == 0)
+    {
+        sqlite3_stmt *stmt;
+        const char *sql = "INSERT INTO users (uname, password) VALUES (?, ?);";
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
+        {
+            printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+
+            return -1;
+        }
+        sqlite3_bind_text(stmt, 1, a, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 2, pass, -1, SQLITE_STATIC);
+
+        if (sqlite3_step(stmt) != SQLITE_DONE)
+        {
+            printf("Insertion failed: %s\n", sqlite3_errmsg(db));
+        }
+        else
+        {
+            printf("User inserted successfully.\n");
+        }
+
+        sqlite3_finalize(stmt);
+
+        return checkUserIfExist(db, a);
+    }
+    return -1;
+}
+
+double getAmount(int id, int accountId, sqlite3 *db)
+{
+    sqlite3_stmt *stmt;
+    const char *sql = "SELECT amount FROM records WHERE accountNbr=? AND userId=?;";
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
+    {
+        printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
+        return -1;
+    }
+
+    sqlite3_bind_int(stmt, 1, accountId);
+    sqlite3_bind_int(stmt, 2, id);
+
+    double accntAmount = 0.0;
+
+    if (sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        accntAmount = sqlite3_column_double(stmt, 0);
+    }
+
+    sqlite3_finalize(stmt);
+    return accntAmount;
 }

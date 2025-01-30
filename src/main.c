@@ -3,7 +3,7 @@
 void mainMenu(struct User u, sqlite3 *db)
 {
     int option = 0;
-    // system("clear");
+    system("clear");
     printf("\n\n\t\t======= ATM =======\n");
     printf("\n\t\t-->> Feel free to choose one of the options below <<--\n");
     printf("\n\t\t[1]- Create a new account\n");
@@ -84,10 +84,10 @@ void initMenu(struct User *u, sqlite3 *db)
         case 1:
             loginMenu(u->name, u->password);
             u->id = getPassword(*u, db);
-            printf("%s %s", u->name, u->password);
             if (u->id != -1)
             {
                 printf("\n\nPassword Match!");
+                // sleep(1)
             }
             else
             {
@@ -101,6 +101,7 @@ void initMenu(struct User *u, sqlite3 *db)
             if (u->id != -1)
             {
                 printf("\n\ninfo save");
+                // sleep(1)
             }
             else
             {
@@ -129,7 +130,7 @@ int main()
     }
     sqlite3 *db;
 
-    if (sqlite3_open("database.db", &db))
+    if (sqlite3_open("../data/database.db", &db))
     {
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
         return 0;

@@ -29,14 +29,25 @@ void createNewAcc(struct User u, sqlite3 *db)
     system("clear");
 noAccount:
     printf("\t\t\t===== New record =====\n");
-    buffer = NULL;
-    while (buffer == NULL)
+    //////////////////////////
+    buffer = (char *)malloc(11 * sizeof(char));
+
+    Date date;
+
+    scanDate(&date);
+
+    dateToString(date, buffer);
+
+    if (buffer == NULL)
     {
-        printf("\nEnter today's date(mm/dd/yyyy):");
-        buffer = scanString(50, isAlphaNemric);
+        printf("error in date");
+        exit(1);
     }
+
     strcpy(r.time, buffer);
+
     free(buffer);
+    ////////////////////////////
     r.accountNbr = 0;
     while (r.accountNbr <= 0)
     {
@@ -90,6 +101,7 @@ noAccount:
     /********************************/
     if (InsertAccInfo(db, u, r) == 0)
     {
+        printf("error in inserting accont info");
         exit(1);
     }
     success(u, db);
@@ -129,7 +141,6 @@ void checkAccounts(struct User u, sqlite3 *db, int accountNmber)
     sqlite3_stmt *stmt;
     const char *sql = "SELECT accountNbr,country,phone,accountType,time,amount FROM records where accountNbr=?;";
 
-    // Prepare SELECT statement
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
         printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
@@ -148,7 +159,7 @@ void checkAccounts(struct User u, sqlite3 *db, int accountNmber)
         strcpy(r.time, (char *)sqlite3_column_text(stmt, 4));
         r.amount = sqlite3_column_double(stmt, 5);
         printAcountInfo(r);
-        accountDetials(r.accountType, r.amount);
+        accountDetials(r.accountType, r.amount,r.time);
     }
 
     sqlite3_finalize(stmt);
@@ -264,7 +275,7 @@ void makeTransaction(struct User u, sqlite3 *db)
     int id = 0;
     while (id <= 0 || checkAccountIfExist(db, u.id, id) != 2)
     {
-        printf("Enter Account Number you want to remove:");
+        printf("Enter Account Number you want:");
         id = scanInt();
     }
 
@@ -292,25 +303,8 @@ void makeTransaction(struct User u, sqlite3 *db)
     }
 
     /*********************************************/
+    double accntAmount = getAmount(u.id, id, db);
 
-    sqlite3_stmt *stmt;
-    const char *sql = "SELECT amount FROM records WHERE accountNbr=? AND userId=?;";
-
-    // Prepare the SQL statement
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
-    {
-        printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
-
-        return;
-    }
-    sqlite3_bind_int(stmt, 1, id);
-    sqlite3_bind_int(stmt, 2, u.id);
-    double accntAmount;
-    while (sqlite3_step(stmt) == SQLITE_ROW)
-    {
-        accntAmount = sqlite3_column_double(stmt, 0);
-    }
-    sqlite3_finalize(stmt);
     if (option == 1 && accntAmount < TranAmount)
     {
         system("clear");
@@ -326,8 +320,8 @@ void makeTransaction(struct User u, sqlite3 *db)
     {
         accntAmount += TranAmount;
     }
-
-    sql = "UPDATE records SET amount=? WHERE accountNbr=? AND userId=?;";
+    sqlite3_stmt *stmt;
+    const char *sql = "UPDATE records SET amount=? WHERE accountNbr=? AND userId=?;";
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK)
     {
         printf("Failed to prepare statement: %s\n", sqlite3_errmsg(db));
